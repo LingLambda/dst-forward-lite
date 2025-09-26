@@ -1,0 +1,9 @@
+sig.bin
+.DS_Store
+.vscode
+
+*.log
+application.toml
+*.db
+*.png
+*.txt

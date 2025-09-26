@@ -1,0 +1,27 @@
+[bot]
+# 账号 必填
+account = 0
+# 密码 选填
+password = ""
+# SignServer 必填
+signServer = "https://sign.lagrangecore.org/api/sign/30366"
+
+[log]
+# 日志级别: 可选 debug, info, warn, error
+level = "info"
+# 是否启用文件输出 (true = 输出到文件, false = 只输出到控制台)
+enableFile = true
+# 日志文件路径
+filePath = "logs/app.log"
+# 单个日志文件最大大小 (单位: MB)
+maxSize = 10
+# 保留的旧文件个数 (超过后会删除最旧的文件)
+maxBackups = 20
+# 保留的旧文件天数 (超过后会自动删除)
+maxAge = 30
+# 日志格式: 可选 text, json
+format = "text"
+
+[other]
+qrCodePath = "crcode.png"
+ginPort = 5562

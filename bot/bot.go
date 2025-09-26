@@ -1,0 +1,96 @@
+package bot
+
+import (
+	"github.com/LagrangeDev/LagrangeGo/client"
+	"github.com/LagrangeDev/LagrangeGo/client/auth"
+	"llma.dev/config"
+)
+
+// Bot 使用组合模式而不是继承
+type Bot struct {
+	client        *client.QQClient
+	loginMgr      *LoginManager
+	authMgr       *AuthManager
+	connectionMgr *ConnectionManager
+}
+
+// Bot 实例
+var QQClient *Bot
+
+// NewBot 创建新的Bot实例
+func NewBot(client *client.QQClient) *Bot {
+	bot := &Bot{
+		client:   client,
+		loginMgr: NewLoginManager(client),
+		authMgr:  NewAuthManager(client, "sig.bin"),
+	}
+
+	// 创建连接管理器并注册默认事件处理器
+	bot.connectionMgr = NewConnectionManager(client)
+	bot.connectionMgr.RegisterEventHandler(&DefaultConnectionEventHandler{})
+
+	return bot
+}
+
+// Client 获取内部客户端
+func (b *Bot) Client() *client.QQClient {
+	return b.client
+}
+
+// Login 登录
+func (b *Bot) Login() error {
+	return b.loginMgr.Login()
+}
+
+// Listen 开始监听连接状态
+func (b *Bot) Listen() {
+	b.connectionMgr.StartMonitoring()
+}
+
+// Stop 停止Bot
+func (b *Bot) Stop() {
+	b.connectionMgr.StopMonitoring()
+}
+
+// Dumpsig 保存签名
+func (b *Bot) Dumpsig() {
+	b.authMgr.Dumpsig()
+}
+
+// Dumpsig 删除签名
+func (b *Bot) RemoveSig() {
+	b.authMgr.RemoveSigFile()
+}
+
+// GetConnectionManager 获取连接管理器
+func (b *Bot) GetConnectionManager() *ConnectionManager {
+	return b.connectionMgr
+}
+
+// GetLoginManager 获取登录管理器
+func (b *Bot) GetLoginManager() *LoginManager {
+	return b.loginMgr
+}
+
+// GetAuthManager 获取认证管理器
+func (b *Bot) GetAuthManager() *AuthManager {
+	return b.authMgr
+}
+
+// GetState 获取在线状态
+func (b *Bot) GetState() ConnectionState {
+	return b.connectionMgr.state
+}
+
+// Init 初始化Bot（向后兼容）
+func Init(logger BotLog) {
+	appInfo := auth.AppList["linux"]["3.2.15-30366"]
+	qqClientInstance := client.NewClient(config.GlobalConfig.Bot.Account, config.GlobalConfig.Bot.Password)
+	qqClientInstance.SetLogger(logger)
+	qqClientInstance.UseVersion(appInfo)
+	qqClientInstance.AddSignServer(config.GlobalConfig.Bot.SignServer)
+	qqClientInstance.UseDevice(auth.NewDeviceInfo(114514))
+
+	QQClient = NewBot(qqClientInstance)
+	QQClient.authMgr.LoadSig()
+}
