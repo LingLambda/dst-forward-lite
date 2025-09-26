@@ -1,4 +1,7 @@
 package plugin
 
-func RegisterPlugin() {
+import dstforward "llma.dev/plugin/dst-forward"
+
+func Init() {
+	dstforward.Init()
 }
