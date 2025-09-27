@@ -118,8 +118,6 @@ func IPWhitelistMiddleware(allowedIPs []string) gin.HandlerFunc {
 	}
 }
 
-var GlobalMsgQueue MsgQueue = DefaultQueue()
-
 func (queue *MsgQueue) enqueueGroupMessage(groupMsg *message.GroupMessage) {
 	queue.enqueue(Message{
 		Type: MsgText,
@@ -174,7 +172,31 @@ func (queue *MsgQueue) enqueueCmdMsgByPrivate(head string, content any, privateM
 	})
 }
 
+// WriterAdapter 把 io.Writer 的 Write 转发给 llog
+type WriterAdapter struct{}
+type ErrorWriterAdapter struct{}
+
+func (w *WriterAdapter) Write(p []byte) (n int, err error) {
+	llog.Infof("%s", string(p))
+	return len(p), nil
+}
+func (w *ErrorWriterAdapter) Write(p []byte) (n int, err error) {
+	llog.Errorf("%s", string(p))
+	return len(p), nil
+}
+
+func initGinWriter() {
+	writer := &WriterAdapter{}
+	gin.DefaultWriter = writer
+	errorWirte := &ErrorWriterAdapter{}
+	gin.DefaultErrorWriter = errorWirte
+}
+
+var GlobalMsgQueue MsgQueue = DefaultQueue()
+
 func registerServer() {
+	initGinWriter()
+
 	otherConfig := config.GlobalConfig.Other
 
 	router := gin.Default()
