@@ -76,8 +76,8 @@ func (h *RollBackHandler) Handle(ctx *logic.MessageContext) error {
 		dayNum, _ = strconv.Atoi(match[1])
 		llog.Debugf("[回档]匹配到数字: %d", dayNum)
 	}
-	if len(match) <= 1 || dayNum < 1 {
-		errorElemets := []message.IMessageElement{&message.TextElement{Content: "请输入有效的回档天数 示例: /回档 1"}}
+	if len(match) <= 1 || dayNum < 1 || dayNum > 100 {
+		errorElemets := simpleTextElements("请输入有效的回档天数 示例: /回档 1")
 		if isPrivate {
 			ctx.Client.SendPrivateMessage(privateMsg.ID, errorElemets)
 		} else if isGroup {
@@ -86,7 +86,7 @@ func (h *RollBackHandler) Handle(ctx *logic.MessageContext) error {
 		return nil
 	}
 
-	okElements := []message.IMessageElement{&message.TextElement{Content: fmt.Sprintf("已下发回档 %d 天命令", dayNum)}}
+	okElements := simpleTextElements(fmt.Sprintf("已下发回档 %d 天命令", dayNum))
 	if isPrivate {
 		GlobalMsgQueue.enqueueCmdMsgByPrivate(
 			"rollback",
@@ -111,18 +111,45 @@ func (h *RollBackHandler) Handle(ctx *logic.MessageContext) error {
 type BanHandler struct{}
 
 func (h *BanHandler) Handle(ctx *logic.MessageContext) error {
+	text := ctx.GetMessageText()
+	if text == "" {
+		return nil
+	}
+	privateMsg, isPrivate := ctx.GetPrivateMessage()
+	groupMsg, isGroup := ctx.GetGroupMessage()
+
+	re := regexp.MustCompile(`/ban\s+(KU_\S+)`) // 捕获字符串
+	match := re.FindStringSubmatch(text)
+	var kleiId string
+	if len(match) > 1 {
+		kleiId = match[1]
+		llog.Debugf("[ban]匹配到kleiid: %s", kleiId)
+	}
+	if len(match) <= 1 {
+		errorElemets := simpleTextElements("请输入有效的kleiid 示例: /ban KU_xxxxx")
+		if isPrivate {
+			ctx.Client.SendPrivateMessage(privateMsg.ID, errorElemets)
+		} else if isGroup {
+			ctx.Client.SendGroupMessage(groupMsg.GroupUin, errorElemets)
+		}
+		return nil
+	}
+
+	okElements := simpleTextElements(fmt.Sprintf("已将用户 %s 封禁", kleiId))
 	if privateMsg, ok := ctx.GetPrivateMessage(); ok {
 		GlobalMsgQueue.enqueueCmdMsgByPrivate(
 			"ban",
-			"TODO", // TODO
+			kleiId,
 			privateMsg)
+		ctx.Client.SendPrivateMessage(privateMsg.ID, okElements)
 		return nil
 	}
 	if groupMsg, ok := ctx.GetGroupMessage(); ok {
 		GlobalMsgQueue.enqueueCmdMsgByGroup(
 			"ban",
-			"TODO", // TODO
+			kleiId,
 			groupMsg)
+		ctx.Client.SendPrivateMessage(privateMsg.ID, okElements)
 		return nil
 	}
 
@@ -162,7 +189,7 @@ func (h *HelpHandler) Handle(ctx *logic.MessageContext) error {
 /echo <消息> - 回声消息
 /回档 <天数> - 回档指定天数
 /保存 - 即时存档
-/重置世界 - 重置整个世界(谨慎使用)
+/重置世界 - 重新生成整个世界(谨慎使用)
 /ban <科雷id> - 封禁玩家
 `
 
@@ -264,4 +291,8 @@ func (h *GroupMessageHandler) Handle(client *client.QQClient, msg any) error {
 		})
 	}
 	return nil
+}
+
+func simpleTextElements(text string) []message.IMessageElement {
+	return []message.IMessageElement{&message.TextElement{Content: text}}
 }
