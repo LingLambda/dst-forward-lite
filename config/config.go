@@ -2,14 +2,15 @@ package config
 
 import (
 	"log"
+	"os"
 
 	"github.com/BurntSushi/toml"
 )
 
 type Config struct {
-	Bot   BotConfig
-	Log   LogConfig
-	Other OtherConfig
+	Bot   BotConfig   `toml:"bot"`
+	Log   LogConfig   `toml:"log"`
+	Other OtherConfig `toml:"other"`
 }
 
 // BotConfig 代表TOML文件中的bot部分
@@ -33,15 +34,76 @@ type OtherConfig struct {
 	AllowedIPs []string `toml:"allowedIPs"`
 }
 
+// 配置文件名
+const FILE_NAME string = "application.toml"
+
 // GlobalConfig 默认全局配置
 var GlobalConfig *Config
 
-// Init 使用 ./application.toml 初始化全局配置
+// Init 使用本地toml文件初始化全局配置
 func Init() {
 	GlobalConfig = &Config{}
-	_, err := toml.DecodeFile("application.toml", GlobalConfig)
+
+	checkDefaultConfigFile()
+
+	_, err := toml.DecodeFile(FILE_NAME, GlobalConfig)
 	if err != nil {
-		log.Panicf("unable to read global config: %v", err)
+		log.Printf("读取配置文件 %s 错误，请检查配置文件语法是否正确: %v", FILE_NAME, err)
+	}
+}
+
+// 检查配置文件若没有则创建
+func checkDefaultConfigFile() {
+	_, err := os.Stat(FILE_NAME)
+	if err != nil {
+		log.Printf("配置文件 %s 不存在，正在创建默认配置文件", FILE_NAME)
+
+		file, err := os.Create(FILE_NAME)
+		if err != nil {
+			panic(err)
+		}
+		defer file.Close()
+
+		encoder := toml.NewEncoder(file)
+		err = encoder.Encode(DefaultConfig())
+		if err != nil {
+			log.Panicf("创建配置文件 %s 失败", FILE_NAME)
+		}
+		log.Printf("创建配置文件 %s 成功，请在程序目录下的配置文件中填写账号密码后重新启动程序", FILE_NAME)
+		os.Exit(0)
+
+	}
+}
+
+func DefaultConfig() Config {
+	bot := BotConfig{
+		Account:    0,
+		Password:   "111111",
+		SignServer: "https://sign.lagrangecore.org/api/sign/30366",
+	}
+	log := LogConfig{
+		Level:      "info",
+		EnableFile: true,
+		FilePath:   "logs/app.log",
+		MaxSize:    10,
+		MaxBackups: 20,
+		MaxAge:     30,
+		Format:     "text",
+	}
+	other := OtherConfig{
+		QrCodePath: "crcode.png",
+		GinPort:    5562,
+		AllowedIPs: []string{
+			"127.0.0.1",
+			"192.168.1.100",
+			"10.0.0.1",
+		},
+	}
+
+	return Config{
+		Bot:   bot,
+		Log:   log,
+		Other: other,
 	}
 }
 
