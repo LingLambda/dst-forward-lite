@@ -40,7 +40,7 @@ type Data struct {
 	// Head 消息是命令类型时会存在head，代表命令的种类，如 save
 	Head string `json:"head"`
 	// Content 消息正文
-	Content string `json:"content"`
+	Content any `json:"content"`
 }
 
 // Source 来源信息
@@ -120,8 +120,8 @@ func IPWhitelistMiddleware(allowedIPs []string) gin.HandlerFunc {
 
 var GlobalMsgQueue MsgQueue = DefaultQueue()
 
-func enqueueGroupMessage(head string, groupMsg *message.GroupMessage) {
-	GlobalMsgQueue.enqueue(Message{
+func (queue *MsgQueue) enqueueGroupMessage(groupMsg *message.GroupMessage) {
+	queue.enqueue(Message{
 		Type: MsgText,
 		Data: Data{
 			Source: Source{
@@ -137,8 +137,8 @@ func enqueueGroupMessage(head string, groupMsg *message.GroupMessage) {
 		},
 	})
 }
-func enqueueCmdMsgByGroup(head string, groupMsg *message.GroupMessage) {
-	GlobalMsgQueue.enqueue(Message{
+func (queue *MsgQueue) enqueueCmdMsgByGroup(head string, content any, groupMsg *message.GroupMessage) {
+	queue.enqueue(Message{
 		Type: MsgCmd,
 		Data: Data{
 			Source: Source{
@@ -151,12 +151,12 @@ func enqueueCmdMsgByGroup(head string, groupMsg *message.GroupMessage) {
 				Nick: groupMsg.Sender.Nickname,
 			},
 			Head:    head,
-			Content: groupMsg.ToString(),
+			Content: content,
 		},
 	})
 }
-func enqueueCmdMsgByPrivate(head string, privateMsg *message.PrivateMessage) {
-	GlobalMsgQueue.enqueue(Message{
+func (queue *MsgQueue) enqueueCmdMsgByPrivate(head string, content any, privateMsg *message.PrivateMessage) {
+	queue.enqueue(Message{
 		Type: MsgCmd,
 		Data: Data{
 			Source: Source{
@@ -169,7 +169,7 @@ func enqueueCmdMsgByPrivate(head string, privateMsg *message.PrivateMessage) {
 				Nick: privateMsg.Sender.Nickname,
 			},
 			Head:    head,
-			Content: privateMsg.ToString(),
+			Content: content,
 		},
 	})
 }

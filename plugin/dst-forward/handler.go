@@ -2,6 +2,9 @@ package dstforward
 
 import (
 	"context"
+	"fmt"
+	"regexp"
+	"strconv"
 	"strings"
 
 	"github.com/LagrangeDev/LagrangeGo/client"
@@ -38,14 +41,16 @@ type SaveHandler struct{}
 func (h *SaveHandler) Handle(ctx *logic.MessageContext) error {
 
 	if privateMsg, ok := ctx.GetPrivateMessage(); ok {
-		enqueueCmdMsgByPrivate(
+		GlobalMsgQueue.enqueueCmdMsgByPrivate(
 			"save",
+			nil,
 			privateMsg)
 		return nil
 	}
 	if groupMsg, ok := ctx.GetGroupMessage(); ok {
-		enqueueCmdMsgByGroup(
+		GlobalMsgQueue.enqueueCmdMsgByGroup(
 			"save",
+			nil,
 			groupMsg)
 		return nil
 	}
@@ -61,17 +66,41 @@ func (h *RollBackHandler) Handle(ctx *logic.MessageContext) error {
 	if text == "" {
 		return nil
 	}
+	privateMsg, isPrivate := ctx.GetPrivateMessage()
+	groupMsg, isGroup := ctx.GetGroupMessage()
 
-	if privateMsg, ok := ctx.GetPrivateMessage(); ok {
-		enqueueCmdMsgByPrivate(
-			"rollback",
-			privateMsg)
+	re := regexp.MustCompile(`/回档\s+(\d+)`) // 捕获数字
+	match := re.FindStringSubmatch(text)
+	var dayNum int
+	if len(match) > 1 {
+		dayNum, _ = strconv.Atoi(match[1])
+		llog.Debugf("[回档]匹配到数字: %d", dayNum)
+	}
+	if len(match) <= 1 || dayNum < 1 {
+		errorElemets := []message.IMessageElement{&message.TextElement{Content: "请输入有效的回档天数 示例: /回档 1"}}
+		if isPrivate {
+			ctx.Client.SendPrivateMessage(privateMsg.ID, errorElemets)
+		} else if isGroup {
+			ctx.Client.SendGroupMessage(groupMsg.GroupUin, errorElemets)
+		}
 		return nil
 	}
-	if groupMsg, ok := ctx.GetGroupMessage(); ok {
-		enqueueCmdMsgByGroup(
+
+	okElements := []message.IMessageElement{&message.TextElement{Content: fmt.Sprintf("已下发回档 %d 天命令", dayNum)}}
+	if isPrivate {
+		GlobalMsgQueue.enqueueCmdMsgByPrivate(
 			"rollback",
+			dayNum,
+			privateMsg)
+		ctx.Client.SendPrivateMessage(privateMsg.ID, okElements)
+		return nil
+	}
+	if isGroup {
+		GlobalMsgQueue.enqueueCmdMsgByGroup(
+			"rollback",
+			dayNum,
 			groupMsg)
+		ctx.Client.SendGroupMessage(groupMsg.GroupUin, okElements)
 		return nil
 	}
 
@@ -83,14 +112,16 @@ type BanHandler struct{}
 
 func (h *BanHandler) Handle(ctx *logic.MessageContext) error {
 	if privateMsg, ok := ctx.GetPrivateMessage(); ok {
-		enqueueCmdMsgByPrivate(
+		GlobalMsgQueue.enqueueCmdMsgByPrivate(
 			"ban",
+			"TODO", // TODO
 			privateMsg)
 		return nil
 	}
 	if groupMsg, ok := ctx.GetGroupMessage(); ok {
-		enqueueCmdMsgByGroup(
+		GlobalMsgQueue.enqueueCmdMsgByGroup(
 			"ban",
+			"TODO", // TODO
 			groupMsg)
 		return nil
 	}
@@ -102,15 +133,18 @@ func (h *BanHandler) Handle(ctx *logic.MessageContext) error {
 type ResetHandler struct{}
 
 func (h *ResetHandler) Handle(ctx *logic.MessageContext) error {
+	// TODO
 	if privateMsg, ok := ctx.GetPrivateMessage(); ok {
-		enqueueCmdMsgByPrivate(
+		GlobalMsgQueue.enqueueCmdMsgByPrivate(
 			"reset",
+			nil,
 			privateMsg)
 		return nil
 	}
 	if groupMsg, ok := ctx.GetGroupMessage(); ok {
-		enqueueCmdMsgByGroup(
+		GlobalMsgQueue.enqueueCmdMsgByGroup(
 			"reset",
+			nil,
 			groupMsg)
 		return nil
 	}
@@ -173,7 +207,7 @@ func RegisterCustomLogic() {
 		return handler.Handle(ctx)
 	})
 	logic.Manager.HandleCommand("/", "重置世界", func(ctx *logic.MessageContext) error {
-		handler := &RollBackHandler{}
+		handler := &ResetHandler{}
 		return handler.Handle(ctx)
 	})
 	logic.Manager.HandleCommand("/", "ban", func(ctx *logic.MessageContext) error {
@@ -192,19 +226,7 @@ func RegisterCustomLogic() {
 					return nil
 				}
 			}
-			GlobalMsgQueue.enqueue(Message{Type: 0,
-				Data: Data{
-					Source: Source{
-						ID:   msg.GroupUin,
-						Name: msg.GroupName,
-					},
-					Sender: Sender{
-						ID:   msg.Sender.Uin,
-						Name: msg.Sender.Nickname,
-						Nick: msg.Sender.CardName,
-					},
-					Content: msgText,
-				}})
+			GlobalMsgQueue.enqueueGroupMessage(msg)
 		}
 		return nil
 	})
