@@ -242,7 +242,7 @@ func RegisterCustomLogic() {
 		return handler.Handle(ctx)
 	})
 
-	commands := []string{"/ping", "/help", "/echo"}
+	commands := []string{"/ping", "/help", "/echo", "/回档", "/重置世界", "/ban"}
 
 	logic.Manager.HandleGroupMessage(func(ctx *logic.MessageContext) error {
 		if msg, isOk := ctx.GetGroupMessage(); isOk {
