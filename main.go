@@ -7,6 +7,7 @@ import (
 
 	"llma.dev/app"
 	"llma.dev/logic"
+	"llma.dev/plugin"
 	"llma.dev/utils/llog"
 )
 
@@ -36,6 +37,10 @@ func main() {
 
 		// 设置事件监听
 		logicManager.SetupEventListeners()
+
+		// 加载插件
+		plugin.Init()
+
 		defer bot.Client().Release()
 		defer bot.Dumpsig()
 	}

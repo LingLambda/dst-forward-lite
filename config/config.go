@@ -28,8 +28,9 @@ type LogConfig struct {
 	Format     string `toml:"format"`     // 输出格式: text, json
 }
 type OtherConfig struct {
-	QrCodePath string `toml:"qrCodePath"`
-	GinPort    uint   `toml:"ginPort"`
+	QrCodePath string   `toml:"qrCodePath"`
+	GinPort    uint     `toml:"ginPort"`
+	AllowedIPs []string `toml:"allowedIPs"`
 }
 
 // GlobalConfig 默认全局配置

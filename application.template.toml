@@ -25,3 +25,9 @@ format = "text"
 [other]
 qrCodePath = "crcode.png"
 ginPort = 5562
+# 允许连接的 ip，用于确保安全，为空时禁用白名单(不建议)
+allowedIPs = [
+    "127.0.0.1",
+    "192.168.1.100",
+    "10.0.0.1"
+]
