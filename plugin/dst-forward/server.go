@@ -69,7 +69,7 @@ func DefaultQueue() MsgQueue {
 func (m *MsgQueue) enqueue(msg Message) {
 	llog.Debugf("[dst forward队列] 插入队列消息: %v", msg)
 	m.Messages = append(m.Messages, msg)
-	if len(m.Messages) > 3 {
+	if len(m.Messages) > m.MaxSize {
 		m.Messages = m.Messages[len(m.Messages)-m.MaxSize : len(m.Messages)]
 	}
 }
