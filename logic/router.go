@@ -2,8 +2,10 @@ package logic
 
 import (
 	"context"
+	"fmt"
 	"strings"
 	"sync"
+	"time"
 
 	"github.com/LagrangeDev/LagrangeGo/client"
 	"github.com/LagrangeDev/LagrangeGo/client/event"
@@ -115,6 +117,73 @@ func extractTextFromElements(elements []message.IMessageElement) string {
 		}
 	}
 	return strings.Join(textParts, "")
+}
+
+// 等待用户确认
+func (ctx *MessageContext) Prompt(actionName string, timeout time.Duration, confirmFunc func(), cancelFunc func()) {
+	if actionName == "" {
+		actionName = "未知操作"
+	}
+	ctx.Reply([]message.IMessageElement{message.NewText(fmt.Sprintf("你正在执行 %s 请在 %s 内发送“确认”以执行操作", actionName, timeout.String()))})
+
+	// 计算期望的会话标识
+	var sm *SessionMatcher
+
+	if pm, ok := ctx.GetPrivateMessage(); ok {
+		sm = NewSessionMatcher(PrivateMsg, pm.Sender.Uin, pm.Sender.Uin)
+	}
+	if gm, ok := ctx.GetGroupMessage(); ok {
+		sm = NewSessionMatcher(GroupMsg, gm.GroupUin, gm.Sender.Uin)
+	}
+
+	decisionChan := make(chan string, 1)
+	// 事件处理器：仅同会话消息，且文本匹配确认/取消时生效
+	handler := func(_ context.Context, event Event) error {
+		msgEvent, ok := event.(*MessageEvent)
+		if !ok {
+			llog.Errorf("[router.prompt] Event解析错误")
+			return nil
+		}
+		mc := msgEvent.MessageContext
+		if !sm.Match(mc) {
+			return nil
+		}
+
+		text := strings.TrimSpace(strings.ToLower(mc.GetMessageText()))
+		switch text {
+		case "确认":
+			select {
+			case decisionChan <- "confirm":
+			default:
+			}
+		default:
+			select {
+			case decisionChan <- "cancel":
+			default:
+			}
+		}
+		return nil
+	}
+
+	GlobalEventBus.Subscribe(EventTypeMessageReceived, handler)
+
+	var decision string
+	select {
+	case decision = <-decisionChan:
+	case <-time.After(timeout):
+		decision = "timeout"
+	}
+
+	GlobalEventBus.Unsubscribe(EventTypeMessageReceived, handler)
+
+	switch decision {
+	case "confirm":
+		confirmFunc()
+	case "cancel":
+		cancelFunc()
+	case "timeout":
+		ctx.Reply([]message.IMessageElement{message.NewText(fmt.Sprintf("等待超时，已取消 %s 操作", actionName))})
+	}
 }
 
 // HandlerFunc 处理器函数类型

@@ -6,6 +6,7 @@ import (
 	"regexp"
 	"strconv"
 	"strings"
+	"time"
 
 	"github.com/LagrangeDev/LagrangeGo/client"
 	"github.com/LagrangeDev/LagrangeGo/message"
@@ -73,29 +74,39 @@ func (h *RollBackHandler) Handle(ctx *logic.MessageContext) error {
 		dayNum, _ = strconv.Atoi(match[1])
 		llog.Debugf("[回档]匹配到数字: %d", dayNum)
 	}
-	if len(match) <= 1 || dayNum < 1 || dayNum > 100 {
+	if len(match) <= 1 || dayNum < 1 {
 		ctx.Reply(simpleTextElements("请输入有效的回档天数 示例: /回档 1"))
 		return nil
-	}
-
-	okElements := simpleTextElements(fmt.Sprintf("已下发回档 %d 天命令", dayNum))
-	if isPrivate {
-		GlobalMsgQueue.enqueueCmdMsgByPrivate(
-			"rollback",
-			dayNum,
-			privateMsg)
-		ctx.Reply(okElements)
-		return nil
-	}
-	if isGroup {
-		GlobalMsgQueue.enqueueCmdMsgByGroup(
-			"rollback",
-			dayNum,
-			groupMsg)
-		ctx.Reply(okElements)
+	} else if dayNum > 100 {
+		ctx.Reply(simpleTextElements("输入的回档天数过长，请输入有效的回档天数 示例: /回档 1"))
 		return nil
 	}
 
+	confirmFunc := func() {
+		okElements := simpleTextElements(fmt.Sprintf("已下发回档 %d 天命令", dayNum))
+		if isPrivate {
+			GlobalMsgQueue.enqueueCmdMsgByPrivate(
+				"rollback",
+				dayNum,
+				privateMsg)
+			ctx.Reply(okElements)
+			return
+		}
+		if isGroup {
+			GlobalMsgQueue.enqueueCmdMsgByGroup(
+				"rollback",
+				dayNum,
+				groupMsg)
+			ctx.Reply(okElements)
+			return
+		}
+	}
+
+	cancelFunc := func() {
+		ctx.Reply(simpleTextElements("已取消回档操作"))
+	}
+
+	ctx.Prompt(fmt.Sprintf("回档 %d 天", dayNum), 30*time.Second, confirmFunc, cancelFunc)
 	return nil
 }
 
@@ -146,25 +157,30 @@ func (h *BanHandler) Handle(ctx *logic.MessageContext) error {
 type ResetHandler struct{}
 
 func (h *ResetHandler) Handle(ctx *logic.MessageContext) error {
-	// TODO
-	okElements := simpleTextElements("已重置世界")
-	if privateMsg, ok := ctx.GetPrivateMessage(); ok {
-		GlobalMsgQueue.enqueueCmdMsgByPrivate(
-			"reset",
-			nil,
-			privateMsg)
-		ctx.Reply(okElements)
-		return nil
-	}
-	if groupMsg, ok := ctx.GetGroupMessage(); ok {
-		GlobalMsgQueue.enqueueCmdMsgByGroup(
-			"reset",
-			nil,
-			groupMsg)
-		ctx.Reply(okElements)
-		return nil
+
+	confirmFunc := func() {
+		okElements := simpleTextElements("已重置世界")
+		if privateMsg, ok := ctx.GetPrivateMessage(); ok {
+			GlobalMsgQueue.enqueueCmdMsgByPrivate(
+				"reset",
+				nil,
+				privateMsg)
+			ctx.Reply(okElements)
+		}
+		if groupMsg, ok := ctx.GetGroupMessage(); ok {
+			GlobalMsgQueue.enqueueCmdMsgByGroup(
+				"reset",
+				nil,
+				groupMsg)
+			ctx.Reply(okElements)
+		}
 	}
 
+	cancelFunc := func() {
+		ctx.Reply(simpleTextElements("已取消重置世界操作"))
+	}
+
+	ctx.Prompt("重置世界", 30*time.Second, confirmFunc, cancelFunc)
 	return nil
 }
 

@@ -151,6 +151,43 @@ func NewGroupMatcher(groupIDs ...uint32) *GroupMatcher {
 	return &GroupMatcher{GroupIDs: groupIDs}
 }
 
+// 消息上下文匹配器
+
+type SessionType string
+
+const (
+	PrivateMsg SessionType = "private"
+	GroupMsg   SessionType = "group"
+)
+
+type SessionMatcher struct {
+	// 会话类型
+	SessionType SessionType
+	SessionID   uint32
+	SenderID    uint32
+}
+
+func (m *SessionMatcher) Match(ctx *MessageContext) bool {
+	if msg, ok := ctx.GetPrivateMessage(); ok {
+		if m.SessionType == PrivateMsg &&
+			msg.Sender.Uin == m.SessionID {
+			return true
+		}
+	}
+	if msg, ok := ctx.GetGroupMessage(); ok {
+		if m.SessionType == GroupMsg &&
+			msg.GroupUin == m.SessionID &&
+			msg.Sender.Uin == m.SenderID {
+			return true
+		}
+	}
+	return false
+}
+
+func NewSessionMatcher(sessionType SessionType, sessionID uint32, senderID uint32) *SessionMatcher {
+	return &SessionMatcher{SessionType: sessionType, SessionID: sessionID, SenderID: senderID}
+}
+
 // CommandMatcher 命令匹配器
 type CommandMatcher struct {
 	Commands []string
