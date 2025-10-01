@@ -96,6 +96,16 @@ func (mc *MessageContext) GetMessageText() string {
 	return ""
 }
 
+// reply 回复消息
+func (mc *MessageContext) Reply(elements []message.IMessageElement) {
+	if privateMsg, ok := mc.GetPrivateMessage(); ok {
+		mc.Client.SendPrivateMessage(privateMsg.Sender.Uin, elements)
+	}
+	if groupMsg, ok := mc.GetGroupMessage(); ok {
+		mc.Client.SendGroupMessage(groupMsg.GroupUin, elements)
+	}
+}
+
 // extractTextFromElements 从消息元素中提取文本
 func extractTextFromElements(elements []message.IMessageElement) string {
 	var textParts []string

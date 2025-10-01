@@ -23,15 +23,9 @@ func (h *EchoHandler) Handle(ctx *logic.MessageContext) error {
 		return nil
 	}
 
-	if privateMsg, ok := ctx.GetPrivateMessage(); ok {
-		ctx.Client.SendPrivateMessage(privateMsg.Sender.Uin, []message.IMessageElement{
-			message.NewText("你说了: " + text),
-		})
-	} else if groupMsg, ok := ctx.GetGroupMessage(); ok {
-		ctx.Client.SendGroupMessage(groupMsg.GroupUin, []message.IMessageElement{
-			message.NewText("你说了: " + text),
-		})
-	}
+	ctx.Reply([]message.IMessageElement{
+		message.NewText("你说了: " + text),
+	})
 
 	return nil
 }
@@ -46,6 +40,7 @@ func (h *SaveHandler) Handle(ctx *logic.MessageContext) error {
 			"save",
 			nil,
 			privateMsg)
+		ctx.Reply(simpleTextElements("保存成功!"))
 		return nil
 	}
 	if groupMsg, ok := ctx.GetGroupMessage(); ok {
@@ -53,6 +48,7 @@ func (h *SaveHandler) Handle(ctx *logic.MessageContext) error {
 			"save",
 			nil,
 			groupMsg)
+		ctx.Reply(simpleTextElements("保存成功!"))
 		return nil
 	}
 
@@ -78,12 +74,7 @@ func (h *RollBackHandler) Handle(ctx *logic.MessageContext) error {
 		llog.Debugf("[回档]匹配到数字: %d", dayNum)
 	}
 	if len(match) <= 1 || dayNum < 1 || dayNum > 100 {
-		errorElemets := simpleTextElements("请输入有效的回档天数 示例: /回档 1")
-		if isPrivate {
-			ctx.Client.SendPrivateMessage(privateMsg.ID, errorElemets)
-		} else if isGroup {
-			ctx.Client.SendGroupMessage(groupMsg.GroupUin, errorElemets)
-		}
+		ctx.Reply(simpleTextElements("请输入有效的回档天数 示例: /回档 1"))
 		return nil
 	}
 
@@ -93,7 +84,7 @@ func (h *RollBackHandler) Handle(ctx *logic.MessageContext) error {
 			"rollback",
 			dayNum,
 			privateMsg)
-		ctx.Client.SendPrivateMessage(privateMsg.ID, okElements)
+		ctx.Reply(okElements)
 		return nil
 	}
 	if isGroup {
@@ -101,7 +92,7 @@ func (h *RollBackHandler) Handle(ctx *logic.MessageContext) error {
 			"rollback",
 			dayNum,
 			groupMsg)
-		ctx.Client.SendGroupMessage(groupMsg.GroupUin, okElements)
+		ctx.Reply(okElements)
 		return nil
 	}
 
@@ -116,8 +107,6 @@ func (h *BanHandler) Handle(ctx *logic.MessageContext) error {
 	if text == "" {
 		return nil
 	}
-	privateMsg, isPrivate := ctx.GetPrivateMessage()
-	groupMsg, isGroup := ctx.GetGroupMessage()
 
 	re := regexp.MustCompile(`/ban\s+(KU_\S+)`) // 捕获字符串
 	match := re.FindStringSubmatch(text)
@@ -128,11 +117,7 @@ func (h *BanHandler) Handle(ctx *logic.MessageContext) error {
 	}
 	if len(match) <= 1 {
 		errorElemets := simpleTextElements("请输入有效的kleiid 示例: /ban KU_xxxxx")
-		if isPrivate {
-			ctx.Client.SendPrivateMessage(privateMsg.ID, errorElemets)
-		} else if isGroup {
-			ctx.Client.SendGroupMessage(groupMsg.GroupUin, errorElemets)
-		}
+		ctx.Reply(errorElemets)
 		return nil
 	}
 
@@ -142,7 +127,7 @@ func (h *BanHandler) Handle(ctx *logic.MessageContext) error {
 			"ban",
 			kleiId,
 			privateMsg)
-		ctx.Client.SendPrivateMessage(privateMsg.ID, okElements)
+		ctx.Reply(okElements)
 		return nil
 	}
 	if groupMsg, ok := ctx.GetGroupMessage(); ok {
@@ -150,23 +135,25 @@ func (h *BanHandler) Handle(ctx *logic.MessageContext) error {
 			"ban",
 			kleiId,
 			groupMsg)
-		ctx.Client.SendPrivateMessage(privateMsg.ID, okElements)
+		ctx.Reply(okElements)
 		return nil
 	}
 
 	return nil
 }
 
-// ResetHandler 封禁处理器
+// ResetHandler 重置世界处理器
 type ResetHandler struct{}
 
 func (h *ResetHandler) Handle(ctx *logic.MessageContext) error {
 	// TODO
+	okElements := simpleTextElements("已重置世界")
 	if privateMsg, ok := ctx.GetPrivateMessage(); ok {
 		GlobalMsgQueue.enqueueCmdMsgByPrivate(
 			"reset",
 			nil,
 			privateMsg)
+		ctx.Reply(okElements)
 		return nil
 	}
 	if groupMsg, ok := ctx.GetGroupMessage(); ok {
@@ -174,6 +161,7 @@ func (h *ResetHandler) Handle(ctx *logic.MessageContext) error {
 			"reset",
 			nil,
 			groupMsg)
+		ctx.Reply(okElements)
 		return nil
 	}
 
