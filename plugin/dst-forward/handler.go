@@ -217,6 +217,10 @@ func RegisterCustomLogic() {
 		llog.Errorf("[plugin.gemini_chat] Logiclogic.Manager 未初始化")
 		return
 	}
+	// 群认证列表
+	groupMiddle := logic.AllowedGroupMiddleware(config.GlobalConfig.Other.AllowedGroups)
+	logic.Manager.GetRouter().Use(groupMiddle)
+
 	// 身份认证列表
 	authMiddle := logic.AuthMiddleware(config.GlobalConfig.Other.AllowedUIDs)
 

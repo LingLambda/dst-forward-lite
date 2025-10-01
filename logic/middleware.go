@@ -2,6 +2,7 @@ package logic
 
 import (
 	"fmt"
+	"slices"
 	"time"
 
 	"github.com/LagrangeDev/LagrangeGo/client/event"
@@ -137,6 +138,25 @@ func GroupOnlyMiddleware() Middleware {
 				return fmt.Errorf("此命令仅在群聊中可用")
 			}
 			return next(ctx)
+		}
+	}
+}
+
+// AllowedGroupMiddleware 允许群聊中间件
+func AllowedGroupMiddleware(allowedGroups []uint32) Middleware {
+	return func(next HandlerFunc) HandlerFunc {
+		return func(ctx *MessageContext) error {
+			groupMsg, ok := ctx.GetGroupMessage()
+			// 非群聊会话直接放行
+			if !ok {
+				return next(ctx)
+			}
+
+			if slices.Contains(allowedGroups, groupMsg.GroupUin) {
+				return next(ctx)
+			}
+			llog.Debugf("不允许的群聊，已拦截")
+			return nil
 		}
 	}
 }
