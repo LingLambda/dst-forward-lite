@@ -34,6 +34,7 @@ type OtherConfig struct {
 	AllowedIPs    []string `toml:"allowedIPs"`
 	AllowedUIDs   []uint32 `toml:"allowedUIDs"`
 	AllowedGroups []uint32 `toml:"allowedGroups"`
+	BindGroups    []uint32 `toml:"bindGroups"`
 }
 
 // 配置文件名
@@ -51,6 +52,9 @@ func Init() {
 	_, err := toml.DecodeFile(FILE_NAME, GlobalConfig)
 	if err != nil {
 		log.Printf("读取配置文件 %s 错误，请检查配置文件语法是否正确: %v", FILE_NAME, err)
+	}
+	if len(GlobalConfig.Other.BindGroups) == 0 {
+		log.Printf("%s!!!警告!!!:您未在 %s 配置任何绑定群聊，饥荒联机版的消息将不会被转发！！%s", "\033[31m", FILE_NAME, "\033[0m")
 	}
 }
 
@@ -73,7 +77,6 @@ func checkDefaultConfigFile() {
 		}
 		log.Printf("创建配置文件 %s 成功，请在程序目录下的配置文件中填写账号密码后重新启动程序", FILE_NAME)
 		os.Exit(0)
-
 	}
 }
 
@@ -102,6 +105,7 @@ func DefaultConfig() Config {
 		},
 		AllowedUIDs:   []uint32{},
 		AllowedGroups: []uint32{},
+		BindGroups:    []uint32{},
 	}
 
 	return Config{

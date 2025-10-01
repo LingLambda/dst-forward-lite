@@ -7,6 +7,7 @@ import (
 
 	"github.com/LagrangeDev/LagrangeGo/message"
 	"github.com/gin-gonic/gin"
+	"llma.dev/bot"
 	"llma.dev/config"
 	"llma.dev/utils/llog"
 )
@@ -185,6 +186,16 @@ func (w *ErrorWriterAdapter) Write(p []byte) (n int, err error) {
 	return len(p), nil
 }
 
+func parseDstMsg(m DstMsg) *message.TextElement {
+	format := `%s (%s) : %s`
+	return message.NewText(fmt.Sprintf(
+		format,
+		m.UserName,
+		m.SurvivorsName,
+		m.Message,
+	))
+}
+
 func initGinWriter() {
 	writer := &WriterAdapter{}
 	gin.DefaultWriter = writer
@@ -199,6 +210,8 @@ func registerServer() {
 
 	otherConfig := config.GlobalConfig.Other
 
+	gin.SetMode(gin.ReleaseMode)
+
 	router := gin.Default()
 
 	router.Use(IPWhitelistMiddleware(otherConfig.AllowedIPs))
@@ -208,6 +221,13 @@ func registerServer() {
 		if err := c.ShouldBindJSON(&msg); err != nil {
 			c.JSON(400, gin.H{"error": err.Error()})
 			return
+		}
+		for _, gid := range otherConfig.BindGroups {
+
+			bot.QQClient.Client().SendGroupMessage(
+				gid,
+				[]message.IMessageElement{parseDstMsg(msg)},
+			)
 		}
 
 		c.Status(http.StatusOK)
