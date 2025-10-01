@@ -189,7 +189,6 @@ type HelpHandler struct{}
 
 func (h *HelpHandler) Handle(ctx *logic.MessageContext) error {
 	help := `可用命令:
-/ping - 测试连接
 /help - 显示帮助
 /echo <消息> - 回声消息
 /回档 <天数> - 回档指定天数
@@ -253,7 +252,7 @@ func RegisterCustomLogic() {
 		return handler.Handle(ctx)
 	}, authMiddle)
 
-	commands := []string{"/ping", "/help", "/echo", "/回档", "/重置世界", "/ban"}
+	commands := []string{"/help", "/echo", "/回档", "/重置世界", "/ban"}
 
 	// 转发
 	logic.Manager.HandleGroupMessage(func(ctx *logic.MessageContext) error {
