@@ -9,6 +9,7 @@ import (
 
 	"github.com/LagrangeDev/LagrangeGo/client"
 	"github.com/LagrangeDev/LagrangeGo/message"
+	"llma.dev/config"
 	"llma.dev/logic"
 	"llma.dev/utils/llog"
 )
@@ -212,6 +213,8 @@ func RegisterCustomLogic() {
 		llog.Errorf("[plugin.gemini_chat] Logiclogic.Manager 未初始化")
 		return
 	}
+	// 身份认证列表
+	authMiddle := logic.AuthMiddleware(config.GlobalConfig.Other.AllowedUIDs)
 
 	// 注册help命令
 	logic.Manager.HandleCommand("/", "help", func(ctx *logic.MessageContext) error {
@@ -228,22 +231,23 @@ func RegisterCustomLogic() {
 	logic.Manager.HandleCommand("/", "保存", func(ctx *logic.MessageContext) error {
 		handler := &SaveHandler{}
 		return handler.Handle(ctx)
-	})
+	}, authMiddle)
 	logic.Manager.HandleCommand("/", "回档", func(ctx *logic.MessageContext) error {
 		handler := &RollBackHandler{}
 		return handler.Handle(ctx)
-	})
+	}, authMiddle)
 	logic.Manager.HandleCommand("/", "重置世界", func(ctx *logic.MessageContext) error {
 		handler := &ResetHandler{}
 		return handler.Handle(ctx)
-	})
+	}, authMiddle)
 	logic.Manager.HandleCommand("/", "ban", func(ctx *logic.MessageContext) error {
 		handler := &BanHandler{}
 		return handler.Handle(ctx)
-	})
+	}, authMiddle)
 
 	commands := []string{"/ping", "/help", "/echo", "/回档", "/重置世界", "/ban"}
 
+	// 转发
 	logic.Manager.HandleGroupMessage(func(ctx *logic.MessageContext) error {
 		if msg, isOk := ctx.GetGroupMessage(); isOk {
 			llog.Debugf("[dst forward]收到群消息:%v", msg)

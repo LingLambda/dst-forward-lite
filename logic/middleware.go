@@ -100,6 +100,10 @@ func AuthMiddleware(allowedUsers []uint32) Middleware {
 
 	return func(next HandlerFunc) HandlerFunc {
 		return func(ctx *MessageContext) error {
+			if len(userSet) == 0 {
+				return next(ctx)
+			}
+
 			var userID uint32
 
 			// 获取用户ID

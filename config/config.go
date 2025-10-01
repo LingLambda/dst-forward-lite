@@ -29,9 +29,10 @@ type LogConfig struct {
 	Format     string `toml:"format"`     // 输出格式: text, json
 }
 type OtherConfig struct {
-	QrCodePath string   `toml:"qrCodePath"`
-	GinPort    uint     `toml:"ginPort"`
-	AllowedIPs []string `toml:"allowedIPs"`
+	QrCodePath  string   `toml:"qrCodePath"`
+	GinPort     uint     `toml:"ginPort"`
+	AllowedIPs  []string `toml:"allowedIPs"`
+	AllowedUIDs []uint32 `toml:"allowedUIDs"`
 }
 
 // 配置文件名
@@ -98,6 +99,7 @@ func DefaultConfig() Config {
 			"192.168.1.100",
 			"10.0.0.1",
 		},
+		AllowedUIDs: []uint32{},
 	}
 
 	return Config{
