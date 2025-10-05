@@ -13,6 +13,10 @@
 - 启动你的饥荒联机版服务器，安装并启用[此mod](https://steamcommunity.com/sharedfiles/filedetails/?id=3581042885)
 - 在qq群或饥荒中任意发送一条消息查看效果
 
+## 其他:
+
+不管有没有问题都欢迎通过邮件联系我: [abc1514671906@163.com](mailto:abc1514671906@163.com)
+
 ## 感谢:
 
 - [Lagrange.Core](https://github.com/LagrangeDev/Lagrange.Core)
