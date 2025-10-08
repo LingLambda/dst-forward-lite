@@ -213,7 +213,7 @@ func (h *HelpHandler) Handle(ctx *logic.MessageContext) error {
 // RegisterCustomLogic 注册所有自定义逻辑
 func RegisterCustomLogic() {
 	if logic.Manager == nil {
-		llog.Errorf("[plugin.gemini_chat] Logiclogic.Manager 未初始化")
+		llog.Errorf("[dst forward] Logiclogic.Manager 未初始化")
 		return
 	}
 	// 群认证列表
@@ -273,12 +273,12 @@ func RegisterCustomLogic() {
 	logic.Manager.GetEventBus().Subscribe(logic.EventTypeCommandExecuted, func(ctx context.Context, event logic.Event) error {
 		if msgEvent, ok := event.(*logic.MessageEvent); ok {
 			command := msgEvent.MessageContext.GetString("executed_command")
-			llog.Infof("[plugin.gemini_chat] 命令 %s 已执行", command)
+			llog.Infof("[dst forward] 命令 %s 已执行", command)
 		}
 		return nil
 	})
 
-	llog.Infof("[plugin.gemini_chat] 自定义逻辑注册完成")
+	llog.Infof("[dst forward] 自定义逻辑注册完成")
 }
 
 // 向后兼容的处理器实现
