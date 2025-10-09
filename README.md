@@ -4,6 +4,8 @@
 
 旨在简化用户使用体验，修复koishi端一些无法预料的bug
 
+得益于go的轻量跨平台特性，本项目内存占用相较于依赖koishi的 [dst-forward](https://github.com/LingLambda/dst-forward) ，仅为运行整个koishi项目的1/20 （10-20MB），并且极其简单易用，适合新手，强烈建议使用此版本
+
 ## 使用方法：
 
 - 在[relase](https://github.com/LingLambda/dst-forward-lite/releases)下载你的饥荒服务器所在的操作系统对应的二进制程序
