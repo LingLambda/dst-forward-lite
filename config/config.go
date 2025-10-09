@@ -84,7 +84,7 @@ func DefaultConfig() Config {
 	bot := BotConfig{
 		Account:    0,
 		Password:   "111111",
-		SignServer: "https://sign.lagrangecore.org/api/sign/30366",
+		SignServer: "https://sign.lagrangecore.org/api/sign/39038",
 	}
 	log := LogConfig{
 		Level:      "info",
