@@ -15,9 +15,8 @@ type Config struct {
 
 // BotConfig 代表TOML文件中的bot部分
 type BotConfig struct {
-	Account    uint32 `toml:"account"`
-	Password   string `toml:"password"`
-	SignServer string `toml:"signServer"`
+	Account  uint32 `toml:"account"`
+	Password string `toml:"password"`
 }
 type LogConfig struct {
 	Level      string `toml:"level"`      // 日志级别: debug, info, warn, error
@@ -82,9 +81,8 @@ func checkDefaultConfigFile() {
 
 func DefaultConfig() Config {
 	bot := BotConfig{
-		Account:    0,
-		Password:   "111111",
-		SignServer: "https://sign.lagrangecore.org/api/sign/39038",
+		Account:  0,
+		Password: "111111",
 	}
 	log := LogConfig{
 		Level:      "info",

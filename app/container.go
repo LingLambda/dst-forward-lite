@@ -45,22 +45,21 @@ func (c *Container) Initialize() error {
 		PTOSVersion:      19,
 		PackageName:      "com.tencent.qq",
 		WTLoginSDK:       "nt.wtlogin.0.0.1",
-		PackageSign:      "V1_LNX_NQ_3.2.19_39038_GW_B",
 		AppID:            1600001615,
-		SubAppID:         537258424,
-		AppIDQrcode:      13697054,
+		SubAppID:         537313942,
+		AppIDQrcode:      537313942,
 		AppClientVersion: 39038,
-
-		MainSigmap:  169742560,
-		SubSigmap:   0,
-		NTLoginType: 1,
+		MainSigmap:       169742560,
+		SubSigmap:        0,
+		NTLoginType:      1,
 	}
+
 	c.client = client.NewClient(c.config.Bot.Account, c.config.Bot.Password)
 
 	// 看LagrangeGo 改不改，改了就用llog，不改就这样适配
 	c.client.SetLogger(bot.BotLog{})
 	c.client.UseVersion(&appInfo)
-	c.client.AddSignServer(c.config.Bot.SignServer)
+	c.client.AddSignServer("https://sign.lagrangecore.org/api/sign/39038")
 	c.client.UseDevice(auth.NewDeviceInfo(114514))
 
 	// 创建Bot

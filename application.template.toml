@@ -3,8 +3,6 @@
 account = 0
 # 密码 选填
 password = ""
-# SignServer 必填
-signServer = "https://sign.lagrangecore.org/api/sign/39038"
 
 [log]
 # 日志级别: 可选 debug, info, warn, error

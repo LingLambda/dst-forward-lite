@@ -2,8 +2,6 @@ package bot
 
 import (
 	"github.com/LagrangeDev/LagrangeGo/client"
-	"github.com/LagrangeDev/LagrangeGo/client/auth"
-	"llma.dev/config"
 )
 
 // Bot 使用组合模式而不是继承
@@ -83,14 +81,14 @@ func (b *Bot) GetState() ConnectionState {
 }
 
 // Init 初始化Bot（向后兼容）
-func Init(logger BotLog) {
-	appInfo := auth.AppList["linux"]["3.2.15-30366"]
-	qqClientInstance := client.NewClient(config.GlobalConfig.Bot.Account, config.GlobalConfig.Bot.Password)
-	qqClientInstance.SetLogger(logger)
-	qqClientInstance.UseVersion(appInfo)
-	qqClientInstance.AddSignServer(config.GlobalConfig.Bot.SignServer)
-	qqClientInstance.UseDevice(auth.NewDeviceInfo(114514))
+// func Init(logger BotLog) {
+// 	appInfo := auth.AppList["linux"]["3.2.15-30366"]
+// 	qqClientInstance := client.NewClient(config.GlobalConfig.Bot.Account, config.GlobalConfig.Bot.Password)
+// 	qqClientInstance.SetLogger(logger)
+// 	qqClientInstance.UseVersion(appInfo)
+// 	qqClientInstance.AddSignServer("https://sign.lagrangecore.org/api/sign/39038")
+// 	qqClientInstance.UseDevice(auth.NewDeviceInfo(114514))
 
-	QQClient = NewBot(qqClientInstance)
-	QQClient.authMgr.LoadSig()
-}
+// 	QQClient = NewBot(qqClientInstance)
+// 	QQClient.authMgr.LoadSig()
+// }
