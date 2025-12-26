@@ -1,5 +1,7 @@
 ## 简介
 
+>:warning: 本项目由于 Lagrange.Core 不可用的原因已停止更新，目前无法正常使用
+
 本项目是[dst-forward](https://github.com/LingLambda/dst-forward)的重构简化版
 
 旨在简化用户使用体验，修复koishi端一些无法预料的bug
